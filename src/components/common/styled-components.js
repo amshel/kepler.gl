@@ -374,12 +374,8 @@ export const StyledModalContent = styled.div`
  * This workaround will hide the error banner.
  */
 export const StyledMapContainer = styled.div`
-  .mapboxgl-map {
-    z-index: -1;
-    
-    .mapboxgl-missing-css {
-      display: none;
-    }
+  .mapboxgl-map .mapboxgl-missing-css {
+    display: none;
   }
 `;
 

@@ -48,7 +48,9 @@ const MAP_STYLE = {
     position: 'relative'
   },
   top: {
-    position: 'absolute', top: '0px', pointerEvents: 'none'
+    position: 'absolute',
+    top: '0px',
+    pointerEvents: 'none'
   }
 };
 
@@ -333,8 +335,7 @@ export default function MapContainerFactory(MapPopover, MapControl) {
         layers,
         visStateActions,
         mapboxApiAccessToken,
-        mapboxApiUrl,
-        uiState
+        mapboxApiUrl
       } = this.props;
 
       let deckGlLayers = [];
@@ -360,8 +361,6 @@ export default function MapContainerFactory(MapPopover, MapControl) {
         }));
       }
 
-      const isEdit = uiState.mapControls.mapDraw.active;
-
       return (
         <DeckGL
           {...this.props.deckGlProps}
@@ -372,7 +371,6 @@ export default function MapContainerFactory(MapPopover, MapControl) {
           onBeforeRender={this._onBeforeRender}
           onHover={visStateActions.onLayerHover}
           onClick={visStateActions.onLayerClick}
-          style={{zIndex: isEdit ? -1 : 0}}
         />
       );
     }
@@ -483,7 +481,10 @@ export default function MapContainerFactory(MapPopover, MapControl) {
               onDeleteFeature={uiStateActions.deleteFeature}
               onSelect={uiStateActions.setSelectedFeature}
               onUpdate={visStateActions.setFeatures}
-              style={{zIndex: isEdit ? 0 : -1}}
+              style={{
+                pointerEvents: isEdit ? 'all' : 'none',
+                position: 'absolute'
+              }}
               onToggleFeatureLayer={visStateActions.toggleFeatureLayer}
             />
           </MapComponent>
