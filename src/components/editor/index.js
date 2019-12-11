@@ -35,27 +35,40 @@ import {
   getStyle as getEditHandleStyle,
   getEditHandleShape
 } from './handle-style';
-import {EDITOR_MODES} from 'constants';
+import {EDITOR_MODES, LAYER_TYPES} from 'constants';
 
 const DELETE_KEY_EVENT_CODE = 8;
 const ESCAPE_KEY_EVENT_CODE = 27;
+
+const EDITOR_STYLE = {zIndex: 1};
 
 const StyledWrapper = styled.div`
   cursor: ${props => props.editor.mode === EDITOR_MODES.EDIT_VERTEX ? 'pointer' : 'crosshair'};
 `;
 
+const AVAILABLE_LAYERS = [
+  LAYER_TYPES.point,
+  LAYER_TYPES.hexagon,
+  LAYER_TYPES.arc,
+  LAYER_TYPES.line
+];
+
+const editorLayerFilter = layer => AVAILABLE_LAYERS.includes(layer.type);
+
 class Draw extends Component {
   static propTypes = {
+    classnames: PropTypes.string,
     clickRadius: PropTypes.number,
     datasets: PropTypes.object.isRequired,
     editor: PropTypes.object.isRequired,
-    features: PropTypes.arrayOf(PropTypes.object).isRequired,
+    filters: PropTypes.arrayOf(PropTypes.object).isRequired,
     isEnabled: PropTypes.bool,
     layers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    mode: PropTypes.string.isRequired,
     onSelect: PropTypes.func.isRequired,
     onUpdate: PropTypes.func.isRequired,
     onDeleteFeature: PropTypes.func.isRequired,
-    onToggleFeatureLayer: PropTypes.func.isRequired
+    onTogglePolygonFilter: PropTypes.func.isRequired
   };
 
   static defaultProps = {
@@ -122,40 +135,61 @@ class Draw extends Component {
     this.setState({showActions: false});
   };
 
+  _onToggleLayer = layer => {
+    const {selectedFeature} = this.props.editor;
+    if (!selectedFeature) {
+      return;
+    }
+
+    this.props.onTogglePolygonFilter(layer, selectedFeature.id);
+  };
+
   render() {
     const {
       className,
       clickRadius,
       datasets,
       editor,
-      features,
+      mode,
       layers,
+      filters,
+      onUpdate,
       style
     } = this.props;
+
     const {selectedFeature = {}} = editor;
+    const {lastPosition, showActions} = this.state;
+    const selectedFeatureId = (selectedFeature || {}).id;
+    const currentFilter = filters.find(f => f.value.id === selectedFeatureId);
+    const availableLayers = layers.filter(editorLayerFilter);
 
     return (
-      <StyledWrapper editor={editor} className={classnames('editor', className)} style={style}>
+      <StyledWrapper
+        editor={editor}
+        className={classnames('editor', className)}
+        style={style}
+      >
         <Editor
           clickRadius={clickRadius}
-          mode={editor.mode}
-          features={features}
-          selectedFeatureId={(selectedFeature || {}).id}
+          mode={mode}
+          features={editor.features}
+          selectedFeatureId={selectedFeatureId}
           onSelect={this._onSelect}
-          onUpdate={this.props.onUpdate}
+          onUpdate={onUpdate}
           getEditHandleShape={getEditHandleShape}
           getFeatureStyle={getFeatureStyle}
           getEditHandleStyle={getEditHandleStyle}
-          style={{zIndex: 1}}
+          style={EDITOR_STYLE}
         />
-        {this.state.showActions ? (
+        {showActions && Boolean(selectedFeature) ? (
           <FeatureActionPanel
             datasets={datasets}
-            layers={layers}
+            layers={availableLayers}
+            currentFilter={currentFilter}
             onClose={this._closeFeatureAction}
             onDeleteFeature={this._onDeleteSelectedFeature}
-            onToggleLayer={this.props.onToggleFeatureLayer}
-            position={this.state.lastPosition}
+            onToggleLayer={this._onToggleLayer}
+            position={lastPosition}
           />
         ) : null}
       </StyledWrapper>
